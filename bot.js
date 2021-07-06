@@ -1,16 +1,14 @@
 require("dotenv").config();
 const Discord = require("discord.js");
 var decode = require("decode-html");
-const client = new Discord.Client();
 const axios = require("axios");
-const util = require("util");
+
+
+const client = new Discord.Client();
 /* Import Discord Buttons Client */
 const discordButtons = require("discord-buttons-plugin");
 const buttonClient = new discordButtons(client);
 
-// get the insult
-//const insult = require("./insult");
-const { response } = require("express");
 
 const { TOKEN } = process.env;
 client.on("ready", () => {
@@ -37,12 +35,6 @@ client.on("message", (message) => {
       .setStyle("green")
       .setID("yes");
 
-    /* Generate 2nd Button with "No" label on it */
-    const button2 = new buttonClient.MessageButton()
-      .setLabel("No")
-      .setStyle("red")
-      .setID("no");
-
     /* Generate 3rd Link Button */
     const button3 = new buttonClient.MessageButton()
       .setLabel("Join me on OnlyFans")
@@ -52,24 +44,30 @@ client.on("message", (message) => {
     buttonClient.send(null, {
       channel: message.channel.id,
       embed,
-      buttons: [[button1, button2], [button3]],
+      buttons: [[button1], [button3]],
     });
   }
 });
 
+// url that will return an insult
 let url = "https://evilinsult.com/generate_insult.php?lang=en&type=json";
 
 /* Listen to buttons event with their ID */
 buttonClient.on("yes", (inta) => {
+    // axios to send get request for insult message
   axios
     .get(url)
     .then((response) => {
-    //  console.log("Resp " + response.data.insult);
+      //get the response from url
       theInsult = decode(response.data.insult);
-     // console.log("The Insult " + theInsult.toString());
       return response.data.insult;
     })
-    .then((response) => inta.message.reply(theInsult))
+    .then((response) => {
+      // send the response
+
+      let userid = inta.member.user.id;
+      client.users.cache.get(userid).send(theInsult);
+    })
     .catch((error) => {
       console.log(error);
     });
